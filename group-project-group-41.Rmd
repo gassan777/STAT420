@@ -58,6 +58,8 @@ Predictors:
 * embarked - Port of Embarkation (C = Cherbourg, Q = Queenstown, S = Southampton)
 
 ## Methods
+
+### Data cleaning
 - First of all let's do some data cleanup
 - We don't need columns such as PassengerID, Name, Ticket # as they have no impact on our statistical analysis
 - Let's remove them leaving only numeric and factor columns
@@ -65,6 +67,19 @@ Predictors:
 ```{r}
 ptitanic_trn = subset(ptitanic_train, select = c(2, 3, 5, 6, 7, 8, 10, 12))
 ptitanic_tst = subset(ptitanic_test, select = c(2, 4, 5, 6, 7, 9, 11))
+colnames(ptitanic_tst)[1] = "Survived"
+ptitanic_tst$Survived = 0
+```
+
+- Let's also change Survived column to a factor
+
+```{r}
+ptitanic_trn$Survived = as.factor(ptitanic_trn$Survived)
+levels(ptitanic_trn$Survived) <- c("No", "Yes")
+
+ptitanic_tst$Survived = as.factor(ptitanic_tst$Survived)
+levels(ptitanic_tst$Survived) <- c("No", "Yes")
+
 head(ptitanic_trn)
 head(ptitanic_tst)
 ```
@@ -90,6 +105,8 @@ ptitanic_trn$Age = round(na.aggregate(ptitanic_trn$Age))
 apply(is.na(ptitanic_trn),2,sum)
 ```
 
+### Data Analysis
+
 - All good! Ready to do the analysis. Let's get to know our data. Let's take a look at pairs plot and look for any patterns or collinearity among the predictors
 
 ```{r fig.height=8, fig.width=8}
@@ -101,12 +118,13 @@ pairs(ptitanic_trn, col = "dodgerblue")
 - Let's take a quick look at collinearity matrix for numeric variables
 
 ```{r}
-round(cor(ptitanic_trn[c(1:2, 4:7)]), 2)
+round(cor(ptitanic_trn[c(2, 4:7)]), 2)
 ```
 
 - The collinearity matrix shows some collinearity between number of parents / children aboard and # of siblings / spouses aboard which makes sense
 - There is also some collinearity between Fare and Ticket class which also makes sense
 
+### Modeling
 - Time to start looking at the linear regression models
 - Let's start with building a simple additive model
 
