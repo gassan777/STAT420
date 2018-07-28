@@ -89,7 +89,7 @@ apply(is.na(ptitanic),2,sum)
 
 - All good! Ready to do the analysis. Let's get to know our data. Let's take a look at pairs plot and look for any patterns or collinearity among the predictors
 
-```{r}
+```{r fig.height=8, fig.width=8}
 pairs(ptitanic, col = "dodgerblue")
 ```
 
