@@ -34,8 +34,10 @@ The purpose of this analysis will be to ascertain any patterns in the survival o
 
 ### Data
 ```{r}
-ptitanic = read.csv("train.csv")
-str(ptitanic)
+ptitanic_train = read.csv("train.csv")
+ptitanic_test = read.csv("test.csv")
+str(ptitanic_train)
+str(ptitanic_test)
 ```
 This dataset is available at kaggle: https://www.kaggle.com/c/titanic/data
 
@@ -61,15 +63,16 @@ Predictors:
 - Let's remove them leaving only numeric and factor columns
 
 ```{r}
-ptitanic = subset(ptitanic, select = c(2, 3, 5, 6, 7, 8, 10, 12))
-str(ptitanic)
-head(ptitanic)
+ptitanic_trn = subset(ptitanic_train, select = c(2, 3, 5, 6, 7, 8, 10, 12))
+ptitanic_tst = subset(ptitanic_test, select = c(2, 4, 5, 6, 7, 9, 11))
+head(ptitanic_trn)
+head(ptitanic_tst)
 ```
 
 - Now let's see if we have missing values
 
 ```{r}
-apply(is.na(ptitanic),2,sum)
+apply(is.na(ptitanic_trn),2,sum)
 ```
 
 - Yes, out of 891 rows we have 177 records with missing Age which is quite substantial chunk of data
@@ -78,19 +81,19 @@ apply(is.na(ptitanic),2,sum)
 
 ```{r}
 library(zoo)
-ptitanic$Age = round(na.aggregate(ptitanic$Age))
+ptitanic_trn$Age = round(na.aggregate(ptitanic_trn$Age))
 ```
 
 - Let's check for missing values now
 
 ```{r}
-apply(is.na(ptitanic),2,sum)
+apply(is.na(ptitanic_trn),2,sum)
 ```
 
 - All good! Ready to do the analysis. Let's get to know our data. Let's take a look at pairs plot and look for any patterns or collinearity among the predictors
 
 ```{r fig.height=8, fig.width=8}
-pairs(ptitanic, col = "dodgerblue")
+pairs(ptitanic_trn, col = "dodgerblue")
 ```
 
 - No clear patterns or collinearity issues can be seen
@@ -98,7 +101,7 @@ pairs(ptitanic, col = "dodgerblue")
 - Let's take a quick look at collinearity matrix for numeric variables
 
 ```{r}
-round(cor(ptitanic[c(1:2, 4:7)]), 2)
+round(cor(ptitanic_trn[c(1:2, 4:7)]), 2)
 ```
 
 - The collinearity matrix shows some collinearity between number of parents / children aboard and # of siblings / spouses aboard which makes sense
@@ -108,7 +111,7 @@ round(cor(ptitanic[c(1:2, 4:7)]), 2)
 - Let's start with building a simple additive model
 
 ```{r}
-add_model = glm(Survived ~ ., data = ptitanic, family = binomial)
+add_model = glm(Survived ~ ., data = ptitanic_trn, family = binomial)
 summary(add_model)
 ```
 
