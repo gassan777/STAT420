@@ -34,10 +34,8 @@ The purpose of this analysis will be to ascertain any patterns in the survival o
 
 ### Data
 ```{r}
-ptitanic_train = read.csv("train.csv")
-ptitanic_test = read.csv("test.csv")
-str(ptitanic_train)
-str(ptitanic_test)
+ptitanic = read.csv("train.csv")
+str(ptitanic)
 ```
 This dataset is available at kaggle: https://www.kaggle.com/c/titanic/data
 
@@ -65,29 +63,16 @@ Predictors:
 - Let's remove them leaving only numeric and factor columns
 
 ```{r}
-ptitanic_trn = subset(ptitanic_train, select = c(2, 3, 5, 6, 7, 8, 10, 12))
-ptitanic_tst = subset(ptitanic_test, select = c(2, 4, 5, 6, 7, 9, 11))
-colnames(ptitanic_tst)[1] = "Survived"
-ptitanic_tst$Survived = 0
-```
-
-- Let's also change Survived column to a factor
-
-```{r}
-ptitanic_trn$Survived = as.factor(ptitanic_trn$Survived)
-levels(ptitanic_trn$Survived) <- c("No", "Yes")
-
-ptitanic_tst$Survived = as.factor(ptitanic_tst$Survived)
-levels(ptitanic_tst$Survived) <- c("No", "Yes")
-
-head(ptitanic_trn)
-head(ptitanic_tst)
+ptitanic = subset(ptitanic, select = c(2, 3, 5, 6, 7, 8, 10, 12))
+ptitanic$Survived = as.factor(ptitanic$Survived)
+levels(ptitanic$Survived) <- c("No", "Yes")
+head(ptitanic)
 ```
 
 - Now let's see if we have missing values
 
 ```{r}
-apply(is.na(ptitanic_trn),2,sum)
+apply(is.na(ptitanic),2,sum)
 ```
 
 - Yes, out of 891 rows we have 177 records with missing Age which is quite substantial chunk of data
@@ -96,13 +81,29 @@ apply(is.na(ptitanic_trn),2,sum)
 
 ```{r}
 library(zoo)
-ptitanic_trn$Age = round(na.aggregate(ptitanic_trn$Age))
+ptitanic$Age = round(na.aggregate(ptitanic$Age))
 ```
 
 - Let's check for missing values now
 
 ```{r}
-apply(is.na(ptitanic_trn),2,sum)
+apply(is.na(ptitanic),2,sum)
+```
+
+- There are two values of Embarked with blank values so we will remove them as well
+
+```{r}
+ptitanic = ptitanic[-which(ptitanic$Embarked == ""), ]
+```
+
+### Divide the data into train and test datasets
+
+```{r}
+set.seed(42)
+n = nrow(ptitanic)
+trainIndex = sample(1:n, size = round(0.7*n), replace=FALSE)
+ptitanic_trn = ptitanic[trainIndex ,]
+ptitanic_tst = ptitanic[-trainIndex ,]
 ```
 
 ### Data Analysis
@@ -123,6 +124,30 @@ round(cor(ptitanic_trn[c(2, 4:7)]), 2)
 
 - The collinearity matrix shows some collinearity between number of parents / children aboard and # of siblings / spouses aboard which makes sense
 - There is also some collinearity between Fare and Ticket class which also makes sense
+
+- Let's also take a look who survived by age
+
+```{r}
+survived = ptitanic_trn[ptitanic_trn$Survived == "Yes", ]$Age
+died = ptitanic_trn[ptitanic_trn$Survived == "No", ]$Age
+
+par(mfrow = c(1, 2))
+hist(survived, main="Survived passengers", 
+     xlab="Ages", border="dodgerblue", col="blue", breaks=20)
+
+hist(died, main="Deceased passengers", 
+     xlab="Ages", border="dodgerblue", col="blue", breaks=20)
+```
+
+- Let's also take a look at relationship between age / fare / death
+
+```{r}
+plot(ptitanic_trn$Fare, ptitanic_trn$Age, main="Titanic Survivors", 
+     xlab="Fare (in USD)", ylab="Age", pch = 1,
+     col = ifelse(ptitanic_trn$Survived=="Yes", "green", "red"))
+legend("bottomright", c("Died", "Survived"), pch = 1, col = c(2, 3))
+```
+
 
 ### Modeling
 - Time to start looking at the linear regression models
